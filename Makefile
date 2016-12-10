@@ -1,2 +1,2 @@
-demo.pdf: daikon.texinfo
+demo.pdf: demo.texinfo
 	texi2pdf $<
