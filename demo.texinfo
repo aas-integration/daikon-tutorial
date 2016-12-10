@@ -37,7 +37,7 @@
 
 @chapter Introduction
 
-@uref{http://plse.cs.washington.edu/daikon/, ,Daikon} is an implementation 
+@uref{http://plse.cs.washington.edu/daikon/, ,Daikon} is an implementation
 of
 dynamic detection of likely invariants; that is, the Daikon invariant
 detector reports likely program invariants.  An invariant is a property
@@ -58,7 +58,7 @@ Dynamic invariant detection runs a program, observes the values that the
 program computes, and then reports properties that were true over the
 observed executions.
 Daikon is freely available for download from
-@uref{http://plse.cs.washington.edu/daikon/download/, ,download-site}.  
+@uref{http://plse.cs.washington.edu/daikon/download/, ,download-site}.
 The distribution
 includes both source code and
 @uref{http://plse.cs.washington.edu/daikon/download/doc/, ,documentation},
@@ -74,7 +74,7 @@ If you have run @file{integration-test2/fetch.py} (or the underlying
 @file{integration-test2/fetch_dependencies.sh}) then your Daikon
 installation should be ready to go.  If you wish to install Daikon
 for further exploration on your own, see the
-@uref{http://plse.cs.washington.edu/daikon/download/doc/daikon.html#Installing-Daikon, 
+@uref{http://plse.cs.washington.edu/daikon/download/doc/daikon.html#Installing-Daikon,
 ,Installing-Daikon}
 section of the Daikon User Manual.
 
@@ -84,11 +84,11 @@ section of the Daikon User Manual.
 Detecting invariants involves two steps:
 @enumerate
 @item
-Obtain one or more data trace files by running your program under the 
+Obtain one or more data trace files by running your program under the
 control of a
-front end (also known as an instrumenter or tracer) that records 
+front end (also known as an instrumenter or tracer) that records
 information about
-variable values.  You can run your program over one or more inputs of your 
+variable values.  You can run your program over one or more inputs of your
 own
 choosing, such as regression tests or a typical user input session.
 You may choose to obtain trace data for only part of
@@ -105,7 +105,7 @@ with a variety of tools.
 
 In order to detect invariants in a Java program, first run the
 program using the DynComp front end, then pass the resulting
-@file{.decls} file to Chicory.  Finally, run Daikon itself to detect 
+@file{.decls} file to Chicory.  Finally, run Daikon itself to detect
 invariants.
 With the @option{--daikon} option to Chicory, a single command performs
 the last two steps.
@@ -148,14 +148,14 @@ Run the program under the control of DynComp to generate comparability
 information in the file @file{StackArTester.decls-DynComp}.
 
 @example
-java -cp .:$CLASSPATH daikon.DynComp --no-cset-file 
+java -cp .:$CLASSPATH daikon.DynComp --no-cset-file
 DataStructures.StackArTester
 @end example
 
 @item
 Run the program a second time, under the control of the Chicory front end.
 Chicory observes the variable values and passes them to Daikon.
-Daikon infers invariants, prints them, and writes a binary representation 
+Daikon infers invariants, prints them, and writes a binary representation
 of them
 to file @file{StackArTester.inv.gz}.
 
@@ -168,7 +168,7 @@ java -cp .:$CLASSPATH daikon.Chicory --daikon \
 @end enumerate
 
 If you wish to have more control over the invariant detection process,
-you can split the third step above into multiple steps.  Then, step 3 
+you can split the third step above into multiple steps.  Then, step 3
 would become:
 
 @enumerate 3
@@ -203,7 +203,7 @@ java daikon.PrintInvariants StackArTester.inv.gz > inv.log
 Daikon provides many options for controlling how invariants are printed.
 Often, you may want to print the same set of invariants several
 different ways.  However, you only want to run Daikon once, since it may
-be very time-consuming.  The @command{PrintInvariants} utility prints a 
+be very time-consuming.  The @command{PrintInvariants} utility prints a
 set of
 invariants from a @file{.inv} file.
 
@@ -213,14 +213,14 @@ java daikon.PrintInvariants @i{[@var{flags}]} @var{inv-file}
 @end example
 
 See the
-@uref{http://plse.cs.washington.edu/daikon/download/doc/daikon.html#Printing-invariants, 
+@uref{http://plse.cs.washington.edu/daikon/download/doc/daikon.html#Printing-invariants,
 ,Printing-invariant}
 section of the Daikon User Manual for details about using this tool.
 
 
 @chapter Understanding the invariants
 
-This section examines some of the invariants for the @file{StackAr} 
+This section examines some of the invariants for the @file{StackAr}
 example.
 This program is an array-based stack implementation.
 Take a
@@ -272,7 +272,7 @@ recommend that DynComp be run prior to Chicory. The DynComp dynamic
 comparability analysis tool performs dynamic type
 inference to group variables at each program point into comparability sets
 (see @ref{Program point declarations,,,developer,Daikon Developer Manual}
-for the numeric representation format of these sets.)  All variables in 
+for the numeric representation format of these sets.)  All variables in
 each
 comparability set belong to the same ``abstract type'' of data that the
 programmer likely intended to represent, which is a richer set of types
@@ -301,34 +301,32 @@ a look at the invariants for the entry point of the
 @code{createItem(int)} method.  (This first example is what you would have
 gotten without running DynComp.)
 
-@example
+@smallexample
 ======================================================================
 DataStructures.StackArTester.createItem(int):::ENTER
 phase >= 0
-DataStructures.StackArTester.s.topOfStack < 
-size(DataStructures.StackArTester.s.theArray[])-1
+DataStructures.StackArTester.s.topOfStack < size(DataStructures.StackArTester.s.theArray[])-1
 phase <= size(DataStructures.StackArTester.s.theArray[])
 phase != size(DataStructures.StackArTester.s.theArray[])-1
 ======================================================================
-@end example
+@end smallexample
 
 The value of @code{phase} is always less than the size of
 @code{theArray[]}.  While this is true for the observed executions,
-it is not a helpful invariant, since @code{phase} and 
+it is not a helpful invariant, since @code{phase} and
 @code{size(theArray[])}
 represent different abstract types.  Although they are both
 @code{int}s, comparing the two is not meaningful, so this invariant,
 among others, is omitted from the output when Daikon is run with
 DynComp.
 
-@example
+@smallexample
 ======================================================================
 DataStructures.StackArTester.createItem(int):::ENTER
 phase >= 0
-DataStructures.StackArTester.s.topOfStack < 
-size(DataStructures.StackArTester.s.theArray[])-1
+DataStructures.StackArTester.s.topOfStack < size(DataStructures.StackArTester.s.theArray[])-1
 ======================================================================
-@end example
+@end smallexample
 
 
 @chapter Running Daikon on programs from the corpus
@@ -336,17 +334,17 @@ size(DataStructures.StackArTester.s.theArray[])-1
 The PASCALI corpus is a subset of the Leidos corpus.
 To run Daikon on a program from the corpus, using a
 test suite automatically generated by Randoop, run
-the @command{runone.py} python script. For example, to run Daikon on
+the @command{run_dyntrace.py} python script. For example, to run Daikon on
 the @file{react} project:
 
 @example
-./runone.py react
+./run_dyntrace.py react
 @end example
 
 You may wish to redirect the output to a log file, or use the
 @command{PrintInvariants} tool to get a copy of the invariants:
 
-@example 
+@example
 java daikon.PrintInvariants corpus/react/dljc-out/test-classes1/invariants.gz > inv.txt
 @end example
 
@@ -397,7 +395,7 @@ This invariant shows that the @samp{CollisionWorld} and
 @samp{CollisionDetection} objects refer to one another --- and they do so
 correctly!
 Thus, @samp{this} is always identical to @samp{this.collisionDetection.world}.
-This shows how multiple expressions can be used to access the same data.  
+This shows how multiple expressions can be used to access the same data.
 
 
 @section react Invariant examples
@@ -445,9 +443,9 @@ this.imageType >= orig(this.imageType)
 
 @bye
 
-@c  LocalWords:  texinfo setfilename settitle nospellcheck tex tableindent 
-@c paragraphindent firstparagraphindent codequotebacktick exin exinenum 
-@c exampleindent hboxes finalout sp titlefont uref samp lst treenode myArray 
-@c decls mypackage MyClass arg cd DAIKONDIR DataStructures StackArTester cp 
-@c cset classpath PrintInvariants inv theArray getName topOfStack winterDays 
+@c  LocalWords:  texinfo setfilename settitle nospellcheck tex tableindent
+@c paragraphindent firstparagraphindent codequotebacktick exin exinenum
+@c exampleindent hboxes finalout sp titlefont uref samp lst treenode myArray
+@c decls mypackage MyClass arg cd DAIKONDIR DataStructures StackArTester cp
+@c cset classpath PrintInvariants inv theArray getName topOfStack winterDays
 @c createItem smallexample
