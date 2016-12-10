@@ -1,0 +1,442 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename demo.info
+@settitle Daikon Tutorial
+@c %**end of header
+
+@macro nospellcheck{text}
+\text\
+@end macro
+
+@tex
+\global\tableindent=.4in
+@end tex
+
+@paragraphindent none
+@firstparagraphindent none
+@codequotebacktick on
+@c default value for example indentation
+@set exin 4
+@c default value for example indentation within an @enumerate
+@set exinenum 1
+@exampleindent 1
+
+@setchapternewpage off
+
+@c Avoid black boxes marking overfull hboxes in TeX output.
+@finalout
+
+@c Start of Document
+
+@sp 5
+@center @titlefont{Daikon Tutorial}
+@sp 2
+@center December 9, 2016
+@sp 3
+
+
+@chapter Introduction
+
+@uref{http://plse.cs.washington.edu/daikon/, ,Daikon} is an implementation 
+of
+dynamic detection of likely invariants; that is, the Daikon invariant
+detector reports likely program invariants.  An invariant is a property
+that holds at a certain point or points in a program; these are often
+seen in assert statements, documentation, and formal specifications.
+Invariants can be useful in program understanding and a host of other
+applications.  Examples include
+@itemize @bullet
+@item @samp{x.field > abs(y)}
+@item @samp{y = 2*x+3}
+@item @samp{array a is sorted}
+@item  @samp{for all list objects lst, lst.next.prev = lst}
+@item @samp{for all treenode objects n, n.left.value < n.right.value}
+@item @samp{p != null => p.content in myArray}
+@end itemize
+
+Dynamic invariant detection runs a program, observes the values that the
+program computes, and then reports properties that were true over the
+observed executions.
+Daikon is freely available for download from
+@uref{http://plse.cs.washington.edu/daikon/download/, ,download-site}.  
+The distribution
+includes both source code and
+@uref{http://plse.cs.washington.edu/daikon/download/doc/, ,documentation},
+and Daikon's license permits unrestricted use.  Many
+researchers and practitioners have used Daikon; those uses, and Daikon
+itself, are described in various
+@uref{http://plse.cs.washington.edu/daikon/pubs/, ,publications}.
+
+
+@chapter Installing Daikon
+
+If you have run @file{integration-test2/fetch.py} (or the underlying
+@file{integration-test2/fetch_dependencies.sh}) then your Daikon
+installation should be ready to go.  If you wish to install Daikon
+for further exploration on your own, see the
+@uref{http://plse.cs.washington.edu/daikon/download/doc/daikon.html#Installing-Daikon, 
+,Installing-Daikon}
+section of the Daikon User Manual.
+
+
+@chapter Overview of running Daikon
+
+Detecting invariants involves two steps:
+@enumerate
+@item
+Obtain one or more data trace files by running your program under the 
+control of a
+front end (also known as an instrumenter or tracer) that records 
+information about
+variable values.  You can run your program over one or more inputs of your 
+own
+choosing, such as regression tests or a typical user input session.
+You may choose to obtain trace data for only part of
+your program; this can avoid inundating you with
+output, and can also improve performance.
+
+@item
+Run the Daikon invariant detector over the data trace files.
+This detects invariants in the recorded
+information.  You can view the invariants textually, or process them
+with a variety of tools.
+@end enumerate
+
+
+In order to detect invariants in a Java program, first run the
+program using the DynComp front end, then pass the resulting
+@file{.decls} file to Chicory.  Finally, run Daikon itself to detect 
+invariants.
+With the @option{--daikon} option to Chicory, a single command performs
+the last two steps.
+
+For example, if you usually run
+@example
+java mypackage.MyClass arg1 arg2 arg3
+@end example
+
+then instead you would run
+@example
+java daikon.DynComp mypackage.MyClass arg1 arg2 arg3
+java daikon.Chicory --daikon \
+                     --comparability-file=MyClass.decls-DynComp \
+                     mypackage.MyClass arg1 arg2 arg3
+@end example
+
+and the Daikon output is written to the terminal.
+
+
+@chapter Running Daikon on a simple program
+
+The Daikon distribution contains some sample programs that will help
+you get practice in running Daikon.
+
+To detect invariants in the @file{StackAr} sample program, perform the
+following steps after installing Daikon.
+
+@enumerate
+@item
+Compile the program with the @option{-g} switch to enable debugging
+symbols.
+@example
+cd $DAIKONDIR/examples/java-examples/StackAr
+javac -g DataStructures/*.java
+@end example
+
+@item
+Run the program under the control of DynComp to generate comparability
+information in the file @file{StackArTester.decls-DynComp}.
+
+@example
+java -cp .:$CLASSPATH daikon.DynComp --no-cset-file 
+DataStructures.StackArTester
+@end example
+
+@item
+Run the program a second time, under the control of the Chicory front end.
+Chicory observes the variable values and passes them to Daikon.
+Daikon infers invariants, prints them, and writes a binary representation 
+of them
+to file @file{StackArTester.inv.gz}.
+
+@example
+java -cp .:$CLASSPATH daikon.Chicory --daikon \
+      --comparability-file=StackArTester.decls-DynComp \
+      DataStructures.StackArTester
+@end example
+
+@end enumerate
+
+If you wish to have more control over the invariant detection process,
+you can split the third step above into multiple steps.  Then, step 3 
+would become:
+
+@enumerate 3
+@item
+Run the program under the control of the Chicory front end, including
+comparability information, in order to create a trace file named
+@file{StackArTester.dtrace.gz}.
+
+@example
+java -cp .:$CLASSPATH daikon.Chicory \
+      --comparability-file=StackArTester.decls-DynComp \
+      DataStructures.StackArTester
+@end example
+
+@item
+Run Daikon on the trace file.
+
+@example
+java daikon.Daikon StackArTester.dtrace.gz
+@end example
+(Note the classpath (@option{-cp}) argument is not needed as we are not
+running the @command{StackArTester} program.)
+
+You could capture a text copy of the invariants with:
+@example
+java daikon.PrintInvariants StackArTester.inv.gz > inv.log
+@end example
+
+@end enumerate
+
+
+Daikon provides many options for controlling how invariants are printed.
+Often, you may want to print the same set of invariants several
+different ways.  However, you only want to run Daikon once, since it may
+be very time-consuming.  The @command{PrintInvariants} utility prints a 
+set of
+invariants from a @file{.inv} file.
+
+@command{PrintInvariants} is invoked as follows:
+@example
+java daikon.PrintInvariants @i{[@var{flags}]} @var{inv-file}
+@end example
+
+See the
+@uref{http://plse.cs.washington.edu/daikon/download/doc/daikon.html#Printing-invariants, 
+,Printing-invariant}
+section of the Daikon User Manual for details about using this tool.
+
+
+@chapter Understanding the invariants
+
+This section examines some of the invariants for the @file{StackAr} 
+example.
+This program is an array-based stack implementation.
+Take a
+look at @file{DataStructures/StackAr.java} to get a sense of the
+implementation.  Now, look at the sixth section of Daikon output.
+
+
+@example
+======================================================================
+StackAr:::OBJECT
+this.theArray != null
+this.theArray.getClass().getName() == java.lang.Object[].class
+this.topOfStack >= -1
+this.topOfStack <= size(this.theArray[])-1
+======================================================================
+@end example
+
+These four annotations describe the representation invariant.  The
+array is never null, and its runtime type is @code{Object[]}.  The
+@code{topOfStack} index is at least -1 and is less than the length
+of the array.
+
+Next, look at the invariants for the @code{top()} method.
+@code{top()} has two different exit points, at lines 74 and 75
+in the original source.  There is a set of invariants for each exit
+point, as well as a set of invariants that hold for all exit points.
+Look at the invariants when @code{top()} returns at line 75.
+
+@example
+======================================================================
+StackAr.top():::EXIT75
+return == this.theArray[this.topOfStack]
+return == this.theArray[orig(this.topOfStack)]
+return == orig(this.theArray[post(this.topOfStack)])
+return == orig(this.theArray[this.topOfStack])
+this.topOfStack >= 0
+return != null
+======================================================================
+@end example
+
+The return value is never null, and is equal to the array element at
+index @code{topOfStack}.  The top of the stack is at least 0.
+
+
+@chapter DynComp dynamic comparability (abstract type) analysis for Java
+
+While Daikon can be run using only the Chicory front end, it is highly
+recommend that DynComp be run prior to Chicory. The DynComp dynamic
+comparability analysis tool performs dynamic type
+inference to group variables at each program point into comparability sets
+(see @ref{Program point declarations,,,developer,Daikon Developer Manual}
+for the numeric representation format of these sets.)  All variables in 
+each
+comparability set belong to the same ``abstract type'' of data that the
+programmer likely intended to represent, which is a richer set of types
+than the few basic declared types (e.g., int, float) provided by the
+language.
+
+Without comparability information, Daikon attempts to find invariants
+over all pairs (and sometimes triples) of variables present at every
+program point.  This can lead to two negative consequences: First, it
+may take lots of time and memory to infer all of these invariants,
+especially when there are many global or derived variables present.
+Second, many of those invariants are true but meaningless because they
+relate variables which conceptually represent different types (e.g., an
+invariant such as @code{winterDays < year} is true but meaningless
+because days and years are not comparable).
+
+It should be noted that the performance of Daikon with and without the
+use of DynComp can be significant. A 10-30X improvement in the running
+time of Daikon is typical.
+
+
+@section Understanding DynComp
+
+To get a sense of how DynComp helps eliminate uninteresting output, take
+a look at the invariants for the entry point of the
+@code{createItem(int)} method.  (This first example is what you would have
+gotten without running DynComp.)
+
+@example
+======================================================================
+DataStructures.StackArTester.createItem(int):::ENTER
+phase >= 0
+DataStructures.StackArTester.s.topOfStack < 
+size(DataStructures.StackArTester.s.theArray[])-1
+phase <= size(DataStructures.StackArTester.s.theArray[])
+phase != size(DataStructures.StackArTester.s.theArray[])-1
+======================================================================
+@end example
+
+The value of @code{phase} is always less than the size of
+@code{theArray[]}.  While this is true for the observed executions,
+it is not a helpful invariant, since @code{phase} and 
+@code{size(theArray[])}
+represent different abstract types.  Although they are both
+@code{int}s, comparing the two is not meaningful, so this invariant,
+among others, is omitted from the output when Daikon is run with
+DynComp.
+
+@example
+======================================================================
+DataStructures.StackArTester.createItem(int):::ENTER
+phase >= 0
+DataStructures.StackArTester.s.topOfStack < 
+size(DataStructures.StackArTester.s.theArray[])-1
+======================================================================
+@end example
+
+
+@chapter Running Daikon on programs from the corpus
+
+The PASCALI corpus is a subset of the Leidos corpus.
+To run Daikon on a program from the corpus, using a
+test suite automatically generated by Randoop, run
+the @command{runone.py} python script. For example, to run Daikon on
+the @file{react} project:
+
+@example
+./runone.py react
+@end example
+
+You may wish to redirect the output to a log file, or use the
+@command{PrintInvariants} tool to get a copy of the invariants:
+
+@example 
+java daikon.PrintInvariants corpus/react/dljc-out/test-classes1/invariants.gz > inv.txt
+@end example
+
+The next section shows some of the invariants that Daikon outputs for these
+programs.
+
+
+
+@section imagej invariant examples
+
+@smallexample
+===========================================================================
+ij.IJ:::CLASS
+ij.IJ.df[].getClass().getName() elements == java.text.DecimalFormat.class
+size(ij.IJ.df[]) == 10
+===========================================================================
+@end smallexample
+
+
+
+@section jreactphysics3d Invariant examples
+
+@smallexample
+===========================================================================
+net.smert.jreactphysics3d.constraint.FixedJointInfo:::OBJECT
+this.type == net.smert.jreactphysics3d.constraint.JointType.FIXEDJOINT
+this.positionCorrectionTechnique ==
+net.smert.jreactphysics3d.configuration.JointsPositionCorrectionTechnique.NON_LINEAR_GAUSS_SEIDEL
+===========================================================================
+net.smert.jreactphysics3d.engine.CollisionWorld:::OBJECT
+this == this.collisionDetection.world
+this.currentBodyID == this.collisionDetection.world.currentBodyID
+this.collisionDetection == this.collisionDetection.broadPhaseAlgorithm.collisionDetection
+this.collisionDetection == this.collisionDetection.world.collisionDetection
+this.collisionDetection.world.collisionShapes == this.collisionShapes
+this.collisionDetection.world.freeBodiesIDs == this.freeBodiesIDs
+this.collisionDetection.world.overlappingPairs == this.overlappingPairs
+this.collisionDetection.world.bodies == this.bodies this.currentBodyID == 0
+===========================================================================
+@end smallexample
+
+
+@section react Invariant examples
+
+@smallexample
+===========================================================================
+com.flowpowered.react.collision.shape.BoxShape:::OBJECT
+this.mType ==
+com.flowpowered.react.collision.shape.CollisionShape$CollisionShapeType.BOX
+this.mExtent.x one of @{ 0.96, 628.96 @}
+this.mExtent.y one of @{ 9.96, 2812.96 @}
+this.mExtent.z one of @{ 9.96, 51.96 @}
+this.mNbSimilarCreatedShapes one of @{ -1, 0 @}
+size(com.flowpowered.react.collision.shape.CollisionShape$CollisionShapeType.$VALUES[]) == 6
+this.mExtent.x < this.mExtent.y
+this.mExtent.x != this.mExtent.z
+this.mExtent.x > this.mMargin
+this.mExtent.y >= this.mExtent.z
+this.mExtent.y > this.mMargin
+this.mExtent.z > this.mMargin
+===========================================================================
+@end smallexample
+
+
+@section thumbnailinator Invariant examples
+
+@smallexample
+===========================================================================
+net.coobird.thumbnailator.makers.FixedSizeThumbnailMaker:::OBJECT
+this.width >= 0
+this.height >= 0
+this.imageType one of @{ -1, 2 @}
+this.imageType != 0
+===========================================================================
+net.coobird.thumbnailator.makers.ThumbnailMaker$ReadinessTracker.isSet(java.lang.String):::EXIT
+(return == true)  ==>  (arg0.toString one of @{ "keepRatio", "scale", "size" @})
+===========================================================================
+net.coobird.thumbnailator.makers.ThumbnailMaker.defaultImageType():::EXIT
+this.imageType == 2
+return.imageType == 2
+this.imageType >= orig(this.imageType)
+===========================================================================
+@end smallexample
+
+
+@bye
+
+@c  LocalWords:  texinfo setfilename settitle nospellcheck tex tableindent 
+@c paragraphindent firstparagraphindent codequotebacktick exin exinenum 
+@c exampleindent hboxes finalout sp titlefont uref samp lst treenode myArray 
+@c decls mypackage MyClass arg cd DAIKONDIR DataStructures StackArTester cp 
+@c cset classpath PrintInvariants inv theArray getName topOfStack winterDays 
+@c createItem smallexample
