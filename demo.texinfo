@@ -365,6 +365,8 @@ size(ij.IJ.df[]) == 10
 ===========================================================================
 @end smallexample
 
+These invariants show that the @samp{df[]} array always has 10 elements,
+and furthermore each of those elements is an object of type @samp{DecimalFormat}.
 
 
 @section jreactphysics3d Invariant examples
@@ -387,6 +389,12 @@ this.collisionDetection.world.overlappingPairs == this.overlappingPairs
 this.collisionDetection.world.bodies == this.bodies this.currentBodyID == 0
 ===========================================================================
 @end smallexample
+
+The first object invariant shows two facts.  First, the
+@samp{FixedJointInfo} subclass always has type @samp{FIXEDJOINT}, which
+verifies an expected property.
+Second, the test suite does only uses @samp{NON_LINEAR_GAUSS_SEIDEL},
+without testing other possibilites for the position correction technique.
 
 
 @section react Invariant examples
