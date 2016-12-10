@@ -378,23 +378,26 @@ this.type == net.smert.jreactphysics3d.constraint.JointType.FIXEDJOINT
 this.positionCorrectionTechnique ==
 net.smert.jreactphysics3d.configuration.JointsPositionCorrectionTechnique.NON_LINEAR_GAUSS_SEIDEL
 ===========================================================================
+@end smallexample
+
+The
+@samp{FixedJointInfo} subclass always has type @samp{FIXEDJOINT}, which
+verifies an expected property.
+In addition, the test suite does only uses @samp{NON_LINEAR_GAUSS_SEIDEL},
+without testing other possibilites for the position correction technique.
+
+@smallexample
+===========================================================================
 net.smert.jreactphysics3d.engine.CollisionWorld:::OBJECT
 this == this.collisionDetection.world
-this.currentBodyID == this.collisionDetection.world.currentBodyID
-this.collisionDetection == this.collisionDetection.broadPhaseAlgorithm.collisionDetection
-this.collisionDetection == this.collisionDetection.world.collisionDetection
-this.collisionDetection.world.collisionShapes == this.collisionShapes
-this.collisionDetection.world.freeBodiesIDs == this.freeBodiesIDs
-this.collisionDetection.world.overlappingPairs == this.overlappingPairs
-this.collisionDetection.world.bodies == this.bodies this.currentBodyID == 0
 ===========================================================================
 @end smallexample
 
-The first object invariant shows two facts.  First, the
-@samp{FixedJointInfo} subclass always has type @samp{FIXEDJOINT}, which
-verifies an expected property.
-Second, the test suite does only uses @samp{NON_LINEAR_GAUSS_SEIDEL},
-without testing other possibilites for the position correction technique.
+This invariant shows that the @samp{CollisionWorld} and
+@samp{CollisionDetection} objects refer to one another --- and they do so
+correctly!
+Thus, @samp{this} is always identical to @samp{this.collisionDetection.world}.
+This shows how multiple expressions can be used to access the same data.  
 
 
 @section react Invariant examples
